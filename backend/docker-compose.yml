@@ -1,0 +1,45 @@
+version: '3.3'
+
+services:
+  laravel-docker:
+    build: ./ # Build from Dockerfile
+    ports:
+      - 9002:80
+    volumes:
+      -  ./:/usr/share/nginx/html  # Tudo que ocorrer na pasta atual será refletido na pasta /usr/share/nginx
+    restart: always
+    networks:
+      - docker # Rede criada para comunicação entre os containers
+
+  db:
+    image: mysql
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    volumes:
+      - .docker/data:/var/lib/mysql # Volume para persistir os dados do banco
+    networks:
+      - docker
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+      UPLOAD_LIMIT: 300M
+    depends_on:
+      - db
+    networks:
+      - docker
+
+networks:
+  docker:
+    driver: bridge # Driver de rede padrão do docker
