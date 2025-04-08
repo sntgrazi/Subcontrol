@@ -1,13 +1,4 @@
 <template>
-  <div class="flex min-h-screen">
-    <div class="w-[70%] flex flex-col bg-[#1c2e5c] justify-center items-center p-5 clip-custom">
-      <!-- Imagem de fundo e fundo azul -->
-      <img src="@/assets/3D glasses-amico 1.svg" alt="Illustration" class="w-1/2 h-auto" />
-      <p class="text-white text-center text-2xl" >Gerencie suas assinaturas de forma <br> simples e rápida</p>
-    </div>
-
-    <div class="w-[30%] bg-white flex justify-center items-center">
-      <!-- Formulário de Login -->
       <div class="w-full max-w-md p-5">
         <h2 class="text-3xl font-bold text-[#1c2e5c]  font-montserrat flex justify-center items-center gap-2 mb-5">
           <MonitorCog  class="w-12 h-12" />
@@ -56,38 +47,33 @@
 
         <div class="mt-6 text-center space-y-2">
          
-          <p><a href="#" class="text-[#1c2e5c] text-sm hover:underline">Não tem uma conta? Criar conta</a></p>
+          <p class="text-[#1c2e5c] text-sm">Não tem uma conta?
+            <button @click="$emit('switch-to-register')" class="text-[#1c2e5c] text-sm hover:underline cursor-pointer">Criar Conta</button>
+          </p>
         </div>
       
       </div>
-    </div>
-  </div>
+
 </template>
-  
+
 <script>
   import { MonitorCog, Mail, LockKeyhole  } from 'lucide-vue-next';
-
-  export default {
-    data() {
-      return {
-        email: '',
-        password: ''
-      };
-    },
-    components: {
-      MonitorCog, Mail, LockKeyhole 
-    },
-    methods: {
-      login() {
-        console.log("Login attempt with", this.email, this.password);
-      }
+export default {
+  data() {
+    return {
+      email: '',
+      password: ''
+    };
+  },
+  components: {
+    MonitorCog,
+    Mail,
+    LockKeyhole
+  },
+  methods: {
+    login() {
+      console.log("Login attempt with", this.email, this.password);
     }
-  };
-</script>
-  
-<style scoped>
-  .clip-custom {
-    clip-path: polygon(0 0, 100% 0%, 80% 100%, 0% 100%);
   }
-</style>
- 
+};
+</script>

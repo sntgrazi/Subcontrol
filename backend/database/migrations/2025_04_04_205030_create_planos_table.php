@@ -13,14 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('personal_access_tokens', function (Blueprint $table) {
+        Schema::create('plans', function (Blueprint $table) {
             $table->id();
-            $table->morphs('tokenable');
             $table->string('name');
-            $table->string('token', 64)->unique();
-            $table->text('abilities')->nullable();
-            $table->timestamp('last_used_at')->nullable();
-            $table->timestamp('expires_at')->nullable();
+            $table->string('description');
+            $table->decimal('price', 10, 2);
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->integer('duration')->default(30); // Duration in days
+            $table->json('features')->nullable(); // JSON column for features
             $table->timestamps();
         });
     }
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('personal_access_tokens');
+        Schema::dropIfExists('plans');
     }
 };
