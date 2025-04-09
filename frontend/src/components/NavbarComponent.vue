@@ -21,7 +21,7 @@
   
         <!-- Menu de navegação -->
         <div class="flex items-center space-x-6">
-          <button @click="logout" class="text-white font-medium hover:underline">
+          <button @click="logout" class="text-white font-medium hover:underline cursor-pointer">
             Sair
           </button>
         </div>
@@ -31,12 +31,25 @@
 <script>
 
 import { MonitorCog } from 'lucide-vue-next';
+import { logout } from '../services/authService'; // Importa o serviço de logout
+
 
 export default {
   methods: {
     logout() {
-      // Simulação de logout, você pode ajustar conforme sua lógica de auth
-      this.$router.push('/');
+      localStorage.removeItem('token'); 
+      localStorage.removeItem('user'); 
+
+      this.$router.push({ name: 'login' });
+
+      // Chama o serviço de logout, se necessário
+      logout()
+      .then(() => {
+      console.log('Logout successful');
+      })
+      .catch((error) => {
+        console.error('Logout failed', error);
+      });
     }
   },
   components: {

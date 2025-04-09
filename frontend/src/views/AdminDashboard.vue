@@ -71,11 +71,11 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
               <tr v-for="plano in planosFiltrados" :key="plano.id" class="hover:bg-gray-50 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ plano.nome }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ plano.name }}</td>
                 <td class="px-6 py-4">
-                  <div class="truncate max-w-xs text-sm text-gray-700">{{ plano.descricao }}</div>
+                  <div class="truncate max-w-xs text-sm text-gray-700">{{ plano.description }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">R$ {{ plano.preco.toFixed(2) }}/mês</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">R$ {{ plano.price }}/mês</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span 
                     :class="plano.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
@@ -97,10 +97,10 @@
                     <button 
                       @click="toggleStatus(plano)" 
                       class="p-1 rounded-full transition-colors"
-                      :class="plano.status === 'ativo' ? 'text-yellow-600 hover:text-yellow-900 hover:bg-yellow-100' : 'text-green-600 hover:text-green-900 hover:bg-green-100'"
-                      :title="plano.status === 'ativo' ? 'Desativar plano' : 'Ativar plano'"
+                      :class="plano.status === 'active' ? 'text-yellow-600 hover:text-yellow-900 hover:bg-yellow-100' : 'text-green-600 hover:text-green-900 hover:bg-green-100'"
+                      :title="plano.status === 'active' ? 'Desativar plano' : 'Ativar plano'"
                     >
-                      <XCircleIcon v-if="plano.status === 'ativo'" size="18" />
+                      <XCircleIcon v-if="plano.status === 'active'" size="18" />
                       <CheckCircleIcon v-else size="18" />
                     </button>
                     <button 
@@ -180,12 +180,12 @@
       </div>
       
       <div class="p-6">
-        <form @submit.prevent="salvarPlano">
+        <form @submit.prevent="createPlan">
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Plano</label>
             <input 
               type="text" 
-              v-model="formPlano.nome" 
+              v-model="formPlano.name" 
               required
               class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
@@ -194,27 +194,49 @@
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
             <textarea 
-              v-model="formPlano.descricao" 
+              v-model="formPlano.description" 
               rows="3"
               class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             ></textarea>
           </div>
           
           <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Preço Mensal (R$)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Preço (R$)</label>
             <input 
               type="number" 
-              v-model="formPlano.preco" 
+              v-model="formPlano.price" 
               step="0.01"
               required
               class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
-          
+
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Duração</label>
+            <div class="flex">
+              <input 
+                type="number" 
+                v-model="formPlano.duration" 
+                step="1"
+                min="1"
+                required
+                class="w-2/3 border rounded-l-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                placeholder="Ex: 30"
+              />
+              <select 
+                v-model="formPlano.unitDuration" 
+                class="w-1/3 border rounded-r-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              >
+                <option value="dias">Dias</option>
+                <option value="meses">Meses</option>
+              </select>
+            </div>
+          </div>
+
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Recursos (um por linha)</label>
             <textarea 
-              v-model="formPlano.recursosText" 
+              v-model="formPlano.features" 
               rows="5"
               placeholder="Ex: 50GB de armazenamento&#10;Suporte prioritário&#10;Acesso a todos os módulos"
               class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
@@ -229,7 +251,7 @@
                 <input 
                   type="radio" 
                   v-model="formPlano.status" 
-                  value="ativo"
+                  value="active"
                   class="h-4 w-4 text-blue-600 focus:ring-blue-500"
                 />
                 <span class="ml-2">Ativo</span>
@@ -238,7 +260,7 @@
                 <input 
                   type="radio" 
                   v-model="formPlano.status" 
-                  value="inativo"
+                  value="inactive"
                   class="h-4 w-4 text-blue-600 focus:ring-blue-500"
                 />
                 <span class="ml-2">Inativo</span>
@@ -265,36 +287,6 @@
         </form>
       </div>
     </div>
-    
-    <!-- Modal de confirmação de exclusão -->
-    <div v-if="planoParaExcluir" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-        <div class="p-6">
-          <h2 class="text-xl font-bold mb-4">Confirmar Exclusão</h2>
-          
-          <p class="mb-6">
-            Tem certeza que deseja excluir o plano <span class="font-semibold">{{ planoParaExcluir.nome }}</span>?
-            Esta ação não pode ser desfeita.
-          </p>
-          
-          <div class="flex justify-end space-x-3">
-            <button 
-              @click="planoParaExcluir = null"
-              class="px-4 py-2 border rounded hover:bg-gray-100"
-            >
-              Cancelar
-            </button>
-            
-            <button 
-              @click="excluirPlano"
-              class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              Excluir
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -309,6 +301,7 @@ import {
   Search as SearchIcon,
   X as XIcon
 } from 'lucide-vue-next';
+import { createPlan, getPlans } from '@/services/planService'; 
 
 
 export default {
@@ -326,59 +319,20 @@ export default {
   data() {
     return {
       // Dados para os planos
-      planos: [
-        {
-          id: 1,
-          nome: 'Plano Básico',
-          descricao: 'Ideal para pequenas empresas e iniciantes',
-          preco: 19.90,
-          recursos: ['10GB de armazenamento', 'Suporte por email', 'Acesso a módulos básicos'],
-          status: 'ativo',
-          dataCriacao: '2025-01-15',
-          assinantes: 245
-        },
-        {
-          id: 2,
-          nome: 'Plano Premium',
-          descricao: 'Para empresas em crescimento que precisam de mais recursos',
-          preco: 49.90,
-          recursos: ['50GB de armazenamento', 'Suporte prioritário', 'Acesso a todos os módulos', 'Ferramentas avançadas'],
-          status: 'ativo',
-          dataCriacao: '2025-01-20',
-          assinantes: 187
-        },
-        {
-          id: 3,
-          nome: 'Plano Enterprise',
-          descricao: 'Solução completa para grandes empresas com necessidades avançadas',
-          preco: 99.90,
-          recursos: ['100GB de armazenamento', 'Suporte VIP 24/7', 'Acesso a todos os módulos', 'Ferramentas avançadas', 'Integrações personalizadas', 'API exclusiva'],
-          status: 'ativo',
-          dataCriacao: '2025-02-05',
-          assinantes: 62
-        },
-        {
-          id: 4,
-          nome: 'Plano Free Trial',
-          descricao: 'Versão gratuita por 30 dias para teste',
-          preco: 0.00,
-          recursos: ['5GB de armazenamento', 'Suporte comunitário', 'Acesso limitado a módulos básicos'],
-          status: 'inativo',
-          dataCriacao: '2025-03-10',
-          assinantes: 530
-        }
-      ],
+      planos: [],
       
       // Controles de interface
       mostrarModalCriar: false,
       planoEmEdicao: null,
       planoParaExcluir: null,
       formPlano: {
-        nome: '',
-        descricao: '',
-        preco: 0,
-        recursosText: '',
-        status: 'ativo'
+        name: '',
+        description: '',
+        price: 0,
+        features: '',
+        duration: 30,
+        unitDuration: 'dias',
+        status: 'active'
       },
       
       // Controles de filtragem e paginação
@@ -397,8 +351,8 @@ export default {
       if (this.termoPesquisa) {
         const termo = this.termoPesquisa.toLowerCase();
         resultado = resultado.filter(plano => 
-          plano.nome.toLowerCase().includes(termo) || 
-          plano.descricao.toLowerCase().includes(termo)
+          plano.name.toLowerCase().includes(termo) || 
+          plano.description.toLowerCase().includes(termo)
         );
       }
       
@@ -409,11 +363,9 @@ export default {
       
       // Aplicar ordenação
       if (this.ordenacao === 'nome') {
-        resultado.sort((a, b) => a.nome.localeCompare(b.nome));
+        resultado.sort((a, b) => a.name.localeCompare(b.name));
       } else if (this.ordenacao === 'preco') {
-        resultado.sort((a, b) => a.preco - b.preco);
-      } else if (this.ordenacao === 'data') {
-        resultado.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
+        resultado.sort((a, b) => a.price - b.price);
       }
       
       return resultado;
@@ -422,92 +374,90 @@ export default {
       return Math.ceil(this.planosFiltrados.length / this.itensPorPagina);
     }
   },
+  created() {
+    this.getPlans(); // Carregar planos ao montar o componente
+  }, 
   methods: {
     editarPlano(plano) {
       this.planoEmEdicao = { ...plano };
       this.formPlano = {
         ...plano,
-        recursosText: plano.recursos.join('\n')
+        recursosText: plano.features.join('\n')
       };
     },
-    
+
     toggleStatus(plano) {
       const index = this.planos.findIndex(p => p.id === plano.id);
       if (index !== -1) {
-        this.planos[index].status = this.planos[index].status === 'ativo' ? 'inativo' : 'ativo';
-        
-        // Aqui você chamaria sua API para atualizar o status
-        // await api.atualizarStatusPlano(plano.id, this.planos[index].status);
+        this.planos[index].status = this.planos[index].status === 'active' ? 'inactive' : 'inactive';
       }
     },
-    
+
     confirmarExclusao(plano) {
       this.planoParaExcluir = plano;
     },
-    
+
     excluirPlano() {
       const index = this.planos.findIndex(p => p.id === this.planoParaExcluir.id);
       if (index !== -1) {
         this.planos.splice(index, 1);
-        
-        // Aqui você chamaria sua API para excluir o plano
-        // await api.excluirPlano(this.planoParaExcluir.id);
-        
         this.planoParaExcluir = null;
       }
     },
-    
+
     fecharModal() {
       this.mostrarModalCriar = false;
       this.planoEmEdicao = null;
       this.resetForm();
     },
-    
+
     resetForm() {
       this.formPlano = {
-        nome: '',
-        descricao: '',
-        preco: 0,
-        recursosText: '',
-        status: 'ativo'
+        name: '',
+        description: '',
+        price: 0,
+        features: '',
+        duration: 30,
+        unitDuration: 'dias',
+        status: 'active'
       };
     },
-    
-    salvarPlano() {
-      const planoData = {
-        ...this.formPlano,
-        recursos: this.formPlano.recursosText.split('\n').filter(item => item.trim() !== '')
-      };
-      
-      if (this.planoEmEdicao) {
-        // Atualizando plano existente
-        const index = this.planos.findIndex(p => p.id === this.planoEmEdicao.id);
-        if (index !== -1) {
-          this.planos[index] = {
-            ...this.planos[index],
-            ...planoData
-          };
-          
-          // Aqui você chamaria sua API para atualizar o plano
-          // await api.atualizarPlano(this.planoEmEdicao.id, planoData);
-        }
-      } else {
-        // Criando novo plano
-        const novoPlano = {
-          id: Math.max(...this.planos.map(p => p.id), 0) + 1,
-          ...planoData,
-          dataCriacao: new Date().toISOString().split('T')[0],
-          assinantes: 0
+
+    async createPlan() {
+      try {
+
+        const featuresArray = this.formPlano.features.split('\n').map(feature => feature.trim()).filter(feature => feature.length > 0);
+
+        // Atualizando o campo 'features' com o array
+        const formData = {
+          ...this.formPlano,
+          features: featuresArray
         };
-        
-        this.planos.push(novoPlano);
-        
-        // Aqui você chamaria sua API para criar o plano
-        // await api.criarPlano(novoPlano);
-      }
+
+        const response = await createPlan(formData); // Chamada ao serviço para criar o plano
       
-      this.fecharModal();
-    }
+        console.log('Plano criado com sucesso:', response.data);
+
+        this.planos.push(response); 
+        this.fecharModal();
+        this.resetForm();
+
+        this.$emit('notificar', 'Plano criado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao criar o plano:', error.response ? error.response.data : error.message);
+        this.$emit('notificar', 'Erro ao criar o plano.');
+      }
+    },
+
+    async getPlans() {
+      try {
+        const response = await getPlans(); // Chamada ao serviço para obter os planos
+        this.planos = response; // Atualiza a lista de planos com os dados recebidos
+      } catch (error) {
+        console.error('Erro ao obter os planos:', error.response ? error.response.data : error.message);
+        this.$emit('notificar', 'Erro ao obter os planos.');
+      }
+    } 
   }
 };
 </script>

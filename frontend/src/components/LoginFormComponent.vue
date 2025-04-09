@@ -5,6 +5,7 @@
           SubControl
         </h2>
 
+       
         <h3 class="text-2xl mb-3 font-popins text-center font-bold text-[#4D4D4D]">Login</h3>
         <p class="text-sm text-gray-500 mb-6 text-center">Faça seu login com seu e-mail e senha ou crie uma <br> nova conta</p>
         
@@ -40,13 +41,15 @@
             </div>
             <p><a href="#" class="text-[#1c2e5c] text-sm hover:underline">Esqueci minha senha</a></p>
           </div>
+          <div v-if="errorMessage" style="color: red;" class="mb-4 text-center">
+            {{ errorMessage }}
+          </div>
           <div class="flex justify-center">
             <button type="submit" class="w-[30%] py-2 bg-transparent border-2 border-blue text-[#163c6b] rounded-xl hover:bg-[#163c6b] hover:text-white text-center cursor-pointer">Entrar</button>
           </div>
         </form>
-
+       
         <div class="mt-6 text-center space-y-2">
-         
           <p class="text-[#1c2e5c] text-sm">Não tem uma conta?
             <button @click="$emit('switch-to-register')" class="text-[#1c2e5c] text-sm hover:underline cursor-pointer">Criar Conta</button>
           </p>
@@ -57,12 +60,15 @@
 </template>
 
 <script>
-  import { MonitorCog, Mail, LockKeyhole  } from 'lucide-vue-next';
+import { MonitorCog, Mail, LockKeyhole  } from 'lucide-vue-next';
+import { login } from '@/services/authService'; // Adjust the import path as necessary
+
 export default {
   data() {
     return {
       email: '',
-      password: ''
+      password: '',
+      errorMessage: null
     };
   },
   components: {
@@ -71,8 +77,23 @@ export default {
     LockKeyhole
   },
   methods: {
-    login() {
-      console.log("Login attempt with", this.email, this.password);
+    async login() {
+      try {
+        const credentials = {
+          email: this.email,
+          password: this.password
+        };
+
+        const response = await login(credentials);
+
+        this.$router.push({ name: 'AdminDashboard' }); 
+        localStorage.setItem('token', response.token); 
+        localStorage.setItem('user', JSON.stringify(response.user)); // Store user data in local storage
+
+      } catch (error) {
+        console.error('Login error:', error);
+        this.errorMessage = "Verifique suas credenciais e tente novamente.";
+      }
     }
   }
 };

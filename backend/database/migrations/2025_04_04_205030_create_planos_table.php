@@ -20,7 +20,9 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->integer('duration')->default(30); // Duration in days
+            $table->enum('unitDuration', ['dias', 'meses'])->default('dias'); // Unit of duration
             $table->json('features')->nullable(); // JSON column for features
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Foreign key to users table
             $table->timestamps();
         });
     }

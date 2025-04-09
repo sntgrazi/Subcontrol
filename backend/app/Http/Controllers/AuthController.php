@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+
 use App\Models\User;
 
 class AuthController extends Controller
@@ -59,9 +61,38 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login realizado com sucesso!',
             'user' => Auth::user(),
-            'token' => $token
-        ]);
+            'token' => $token,
+        ])
+        ->cookie('token', $token, 60, '/', null, false, true, false, 'Strict');
 
     }
+
+    public function logout(Request $request)
+    {
+        // Recupera o token do cookie
+        $token = $request->cookie('token');
+
+        // Verifica se o token está presente
+        if (!$token) {
+            return response()->json(['message' => 'Token não encontrado para logout'], 400);
+        }
+
+        try {
+            // Cria um novo Token a partir do token recuperado
+            $jwtToken = new \Tymon\JWTAuth\Token($token);
+
+            // Invalida o token
+            JWTAuth::manager()->invalidate($jwtToken, false);  // False significa que não é uma invalidação permanente
+
+            // Remove o cookie de token
+            return response()->json(['message' => 'Logout realizado com sucesso!'])
+                ->cookie('token', null, -1, '/', null, false, true, false, 'Strict');
+        } catch (\Exception $e) {
+            // Captura qualquer erro ao tentar invalidar o token
+            return response()->json(['message' => 'Falha ao invalidar o token: ' . $e->getMessage()], 500);
+        }
+    }
+
+
 
 }

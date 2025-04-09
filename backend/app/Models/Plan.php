@@ -15,7 +15,9 @@ class Plan extends Model
         'price',
         'status',
         'duration',
+        'unitDuration',
         'features',
+        'user_id',
     ];
 
     protected $casts = [
